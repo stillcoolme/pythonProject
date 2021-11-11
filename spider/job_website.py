@@ -1,20 +1,20 @@
+import os
+import sys
+import codecs
+sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
+# 用于脚本直接执行时能拿到引用的其他python文件
+sys.path[0] = os.path.abspath(os.path.join(os.getcwd(), ".."))
+
 import requests  # requests是HTTP库
 import re
 from openpyxl import workbook  # 写入Excel表所用
 from openpyxl import load_workbook  # 读取Excel表所用
 from bs4 import BeautifulSoup as bs  # bs:通过解析文档为用户提供需要抓取的数据
-import os
-import io
-import sys
-import sys
-
 
 from utils.date_util import get_date_str, get_date_list_from_before_to_now
 from utils.file import urldownload
 from utils.reg import get_file_suffix
 from utils.string import ifListElementStrInString
-
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf8')  # 改变标准输出的默认编码
 
 
 # 我们开始利用requests.get（）来获取网页并利用bs4解析网页：
@@ -45,7 +45,7 @@ def getData(src, date_str=None):
             continue
         # 处理每个公告
         publishName = element.a.string
-        print('!!!! 正在处理：' + publishName)
+        print('\n!!!! 正在处理：' + publishName)
         publishUrl = element.a['href']
         getJobDetailData(publishUrl, title = publishName)
 
@@ -57,8 +57,8 @@ def getJobDetailData(src, title):
     for element in contentDiv:
         # 招聘文件
         publishFileUrl = element.find_all('a')
+        temp_no = 1
         for element2 in publishFileUrl:
-            temp_no = 1
             downloadFileName = element2.string
             downloadUrl = element2['href']
             suffix = get_file_suffix(downloadUrl)
@@ -69,9 +69,8 @@ def getJobDetailData(src, title):
             if ifListElementStrInString(keyWord, downloadFileName):
                 print('跳过：' + downloadFileName)
                 continue
-
             print(downloadFileName + ': ' + downloadUrl)
-            urldownload(downloadUrl, filePath + '/' + get_date_str() + '_' + str(temp_no) + '_' + title + suffix)
+            urldownload(downloadUrl, filePath + '/' + get_date_str() + '_' + str(temp_no) + '_' + title + '_' + downloadFileName + suffix)
             temp_no += 1
 
 # findall() 查找匹配正则表达式的字符串
@@ -86,19 +85,20 @@ def Find(string):
 
 
 # 查询多少天前的数据
-search_day = 1
+search_day = 2
 
 sourceUrl = [
     'http://www.shiyebian.net/guangdong/shaoguan/',
+    'http://www.shiyebian.net/guangdong/foshan/',
     'http://www.shiyebian.net/guangdong/guangzhou/',
-    'http://www.shiyebian.net/guangdong/shenzhen/',
-    'http://www.shiyebian.net/guangdong/heyuan/',
-    'http://www.shiyebian.net/guangdong/qingyuan/'
+    'http://www.shiyebian.net/guangdong/shenzhen/'
 ]
 
 # 用来排除的条件
 ## 不要那些链接名的文件
-keyWord = ['参考目录', '疫情防控', '报名表', '报名人员信息表', '承诺书', '编外', '证明', '简历']
+keyWord = ['参考目录', '疫情防控', '报名表', '报名人员信息表', '承诺书'
+    , '编外', '合同制', '雇员'
+    , '证明', '简历', '资格复审材料', '联系方式']
 ## 取哪些后缀的文件
 keySuffix = ['.pdf', '.xls', '.xlsx', '.docx', '.doc']
 
@@ -109,14 +109,13 @@ filePath = '/Users/stillcoolme/Downloads'
 
 if __name__ == '__main__':
     print(sys.path[0])
-    sys.path.append(os.path.dirname(sys.path[0]))
 
-    # test = 'http://www.shiyebian.net/xinxi/392458.html'
+    # test = 'http://www.shiyebian.net/xinxi/393405.html'
     # getJobDetailData(test, 'xxx')
 
     day_list = get_date_list_from_before_to_now(search_day)
     for day in day_list:
-        print("!!!! 数据日期：" + day)
+        print("\n!!!! 数据日期：" + day)
         for url in sourceUrl:
             getData(url, day)
 
