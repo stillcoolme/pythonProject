@@ -45,6 +45,13 @@ def getData(src, date_str=None):
             continue
         # 处理每个公告
         publishName = element.a.string
+
+        if ifListElementStrInString(keyWord, publishName):
+            print('\n!!!! 不处理：' + publishName)
+            file = open(filePath + '/_' + date_str[5:10] + '_不处理_' + publishName + '.txt', 'w')
+            file.write(element.a['href'])  # 写入内容信息
+            file.close()
+            continue
         print('\n!!!! 正在处理：' + publishName)
         publishUrl = element.a['href']
         getJobDetailData(publishUrl, title = publishName)
@@ -85,19 +92,18 @@ def Find(string):
 
 
 # 查询多少天前的数据
-search_day = 2
+search_day = 1
 
 sourceUrl = [
     'http://www.shiyebian.net/guangdong/shaoguan/',
     'http://www.shiyebian.net/guangdong/foshan/',
-    'http://www.shiyebian.net/guangdong/guangzhou/',
-    'http://www.shiyebian.net/guangdong/shenzhen/'
+    'http://www.shiyebian.net/guangdong/guangzhou/'
 ]
 
 # 用来排除的条件
 ## 不要那些链接名的文件
-keyWord = ['参考目录', '疫情防控', '报名表', '报名人员信息表', '承诺书'
-    , '编外', '合同制', '雇员'
+keyWord = ['编外', '服务人员', '合同制', '雇员'
+    , '参考目录', '专业目录', '疫情防控', '报名', '承诺书', '登记表', '委托书', '资格审核'
     , '证明', '简历', '资格复审材料', '联系方式']
 ## 取哪些后缀的文件
 keySuffix = ['.pdf', '.xls', '.xlsx', '.docx', '.doc']
@@ -108,8 +114,7 @@ filePath = '/Users/stillcoolme/Downloads'
 
 
 if __name__ == '__main__':
-    print(sys.path[0])
-
+    # print(sys.path[0])
     # test = 'http://www.shiyebian.net/xinxi/393405.html'
     # getJobDetailData(test, 'xxx')
 

@@ -7,7 +7,7 @@ import time
 
 if __name__ == '__main__':
     start = int(time.time())
-    cmd = 'python test.py'
+    cmd = 'python test_wordcloud.py'
     # popen() 这方法不获取返回值的，所以 cmd 的执行本质上是异步的；
     # task.py 本main方法 能立刻执行完毕，然后自动关闭读取端的管道！！；
     # 当读取端关闭时，写入端输出到达管道最大缓存时会收到 SIGPIPE 信号，从而抛出 Broken pipe 异常。
@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
 
     start = int(time.time())
-    cmd = 'python test.py'
+    cmd = 'python test_wordcloud.py'
     with os.popen(cmd) as p:
         print(p.read())
     end = int(time.time())
