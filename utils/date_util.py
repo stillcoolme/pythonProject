@@ -1,6 +1,9 @@
+import time
 from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
 
+def get_now_millisecond():
+    return int(round(time.time() * 1000))
 
 def get_now_str():
     return datetime.now().strftime('%Y-%m-%d %H:%M:%S')

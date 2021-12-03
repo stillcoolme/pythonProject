@@ -1,6 +1,9 @@
+import concurrent.futures
 import os
 import sys
 import codecs
+import time
+
 sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
 # 用于脚本直接执行时能拿到引用的其他python文件
 sys.path[0] = os.path.abspath(os.path.join(os.getcwd(), ".."))
@@ -11,10 +14,21 @@ from openpyxl import workbook  # 写入Excel表所用
 from openpyxl import load_workbook  # 读取Excel表所用
 from bs4 import BeautifulSoup as bs  # bs:通过解析文档为用户提供需要抓取的数据
 
-from utils.date_util import get_date_str, get_date_list_from_before_to_now
+from utils.date_util import get_date_str, get_date_list_from_before_to_now, get_now_millisecond
 from utils.file import urldownload
 from utils.reg import get_file_suffix
 from utils.string import ifListElementStrInString
+
+def getData_thread(website_list, date_str=None):
+    if not date_str:
+        date_str = get_date_str()
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        to_do = []
+        for website in website_list:
+            future = executor.submit(getData, website, date_str)
+            to_do.append(future)
+        for future in concurrent.futures.as_completed(to_do):
+            future.result()
 
 
 # 我们开始利用requests.get（）来获取网页并利用bs4解析网页：
@@ -23,9 +37,10 @@ def getData(src, date_str=None):
     if not date_str:
         date_str = get_date_str()
 
-    html = requests.get(src).content  # requests.get(src)返回的是状态码<Response [200]>，加上.content以字节形式（二进制返回数据。
+    html = requests.get(src)  # requests.get(src)返回的是状态码<Response [200]>，加上.content以字节形式（二进制返回数据。
+    html.encoding = 'gbk'
     # http://www.cnblogs.com/ranxf/p/7808537.html
-    soup = bs(html, 'lxml')  # lxml解析器解析字节形式的数据，得到完整的类似页面的html代码结构的数据
+    soup = bs(html.text, 'lxml')  # lxml解析器解析字节形式的数据，得到完整的类似页面的html代码结构的数据
     # print(soup.prettify())
 
     # 正则表达式查找href
@@ -119,10 +134,16 @@ if __name__ == '__main__':
     # getJobDetailData(test, 'xxx')
 
     day_list = get_date_list_from_before_to_now(search_day)
+
     for day in day_list:
+        start_time = get_now_millisecond()
         print("\n!!!! 数据日期：" + day)
-        for url in sourceUrl:
-            getData(url, day)
+
+        # for url in sourceUrl:
+        #     getData(url, day)
+        # 改造成多线程并行执行
+        getData_thread(sourceUrl, day)
+        print('耗时：' + str(get_now_millisecond() - start_time))
 
     # #  创建Excel表并写入数据
     # wb = workbook.Workbook()  # 创建Excel对象
